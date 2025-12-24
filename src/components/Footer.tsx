@@ -12,7 +12,11 @@ const Footer = () => {
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
+<<<<<<< HEAD
           © 2026 A R Sugir's Greetings! 🎄
+=======
+          © 2025 A R Sugir's Greetings! 🎄
+>>>>>>> 650ca23 (Initial commit from local)
         </p>
       </div>
     </footer>
