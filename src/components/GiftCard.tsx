@@ -53,7 +53,7 @@ const CardView = ({ quote }: { quote: Quote | null }) => {
 
         <div className="text-center">
           <p className="font-display font-bold text-secondary">Lourdes</p>
-          <p className="text-xs">Season’s Greetings 🎄</p>
+          <p className="text-xs">A R Sugir’s Greetings 🎄</p>
         </div>
       </div>
     </div>

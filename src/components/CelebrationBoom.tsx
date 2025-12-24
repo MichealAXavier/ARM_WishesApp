@@ -34,7 +34,7 @@ const CelebrationBoom = ({ isActive }: CelebrationBoomProps) => {
     if (isActive) {
       // Flash effect
       setShowFlash(true);
-      setTimeout(() => setShowFlash(false), 200);
+      setTimeout(() => setShowFlash(false), 400);
 
       // Create explosion rings
       setRings([1, 2, 3]);
@@ -49,7 +49,7 @@ const CelebrationBoom = ({ isActive }: CelebrationBoomProps) => {
           x: 50,
           y: 50,
           angle: (Math.random() * 360 * Math.PI) / 180,
-          velocity: Math.random() * 10 + 15,
+          velocity: Math.random() * 6 + 6, // slower & smoother
           color: colors[Math.floor(Math.random() * colors.length)],
           size: Math.random() * 15 + 5,
           type: types[Math.floor(Math.random() * types.length)],
@@ -61,7 +61,7 @@ const CelebrationBoom = ({ isActive }: CelebrationBoomProps) => {
       const timer = setTimeout(() => {
         setParticles([]);
         setRings([]);
-      }, 5000);
+      }, 7000);
 
       return () => clearTimeout(timer);
     }
@@ -111,7 +111,7 @@ const CelebrationBoom = ({ isActive }: CelebrationBoomProps) => {
             top: `${particle.y}%`,
             "--angle": `${particle.angle}rad`,
             "--velocity": `${particle.velocity}vw`,
-            animationDuration: `${1 + Math.random()}s`,
+            animationDuration: `${2.5 + Math.random() * 2}s`,
           } as React.CSSProperties}
         >
           {particle.type === "circle" ? (

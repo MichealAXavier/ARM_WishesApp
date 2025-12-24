@@ -12,7 +12,7 @@ const Footer = () => {
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          © 2026 Lourdes Season's Greetings! 🎄
+          © 2026 A R Sugir's Greetings! 🎄
         </p>
       </div>
     </footer>

@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, TouchEvent, MouseEvent } from "react";
-import { Gift, Sparkles, Star } from "lucide-react";
 
 interface ScratchCardProps {
   onReveal: () => void;
@@ -11,37 +10,50 @@ const ScratchCard = ({ onReveal, children }: ScratchCardProps) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [scratchPercentage, setScratchPercentage] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [dimensions, setDimensions] = useState({ width: 320, height: 320 });
+  const [dimensions] = useState({ width: 320, height: 320 });
 
-  useEffect(() => {
+  /* ---------------- DRAW SCRATCH LAYER ---------------- */
+  const drawScratchLayer = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Create gift wrap pattern
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = dimensions.width * dpr;
+    canvas.height = dimensions.height * dpr;
+    canvas.style.width = `${dimensions.width}px`;
+    canvas.style.height = `${dimensions.height}px`;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Background
     ctx.fillStyle = "hsl(350, 75%, 45%)";
     ctx.fillRect(0, 0, dimensions.width, dimensions.height);
 
-    // Add golden ribbon vertical
+    // Vertical ribbon
     ctx.fillStyle = "hsl(45, 93%, 58%)";
     ctx.fillRect(dimensions.width / 2 - 20, 0, 40, dimensions.height);
 
-    // Add golden ribbon horizontal
+    // Horizontal ribbon
     ctx.fillRect(0, dimensions.height / 2 - 20, dimensions.width, 40);
 
-    // Add bow in center
+    // Bow
     ctx.beginPath();
     ctx.arc(dimensions.width / 2, dimensions.height / 2, 35, 0, Math.PI * 2);
     ctx.fillStyle = "hsl(45, 93%, 65%)";
     ctx.fill();
 
-    // Add pattern dots
+    // Dots
     ctx.fillStyle = "hsl(350, 80%, 50%)";
     for (let i = 0; i < dimensions.width; i += 30) {
       for (let j = 0; j < dimensions.height; j += 30) {
-        if (Math.abs(i - dimensions.width / 2) > 25 && Math.abs(j - dimensions.height / 2) > 25) {
+        if (
+          Math.abs(i - dimensions.width / 2) > 25 &&
+          Math.abs(j - dimensions.height / 2) > 25
+        ) {
           ctx.beginPath();
           ctx.arc(i, j, 4, 0, Math.PI * 2);
           ctx.fill();
@@ -49,30 +61,44 @@ const ScratchCard = ({ onReveal, children }: ScratchCardProps) => {
       }
     }
 
-    // Add text
-    ctx.font = "bold 24px 'Playfair Display', serif";
+    // Text
+    ctx.font = "bold 24px serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "white";
     ctx.fillText("Scratch to", dimensions.width / 2, dimensions.height / 2 - 60);
     ctx.fillText("Reveal! 🎁", dimensions.width / 2, dimensions.height / 2 + 80);
-  }, [dimensions]);
+  };
 
+  /* ---------------- INIT (IMPORTANT) ---------------- */
+  useEffect(() => {
+    // Delay fixes Safari / Samsung blank canvas
+    const timer = setTimeout(drawScratchLayer, 100);
+    window.addEventListener("resize", drawScratchLayer);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", drawScratchLayer);
+    };
+  }, []);
+
+  /* ---------------- POSITION ---------------- */
   const getPos = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
+    const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    
+
     return {
       x: clientX - rect.left,
       y: clientY - rect.top,
     };
   };
 
+  /* ---------------- SCRATCH ---------------- */
   const scratch = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || isRevealed) return;
+
+    e.preventDefault();
 
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -84,13 +110,16 @@ const ScratchCard = ({ onReveal, children }: ScratchCardProps) => {
     ctx.arc(pos.x, pos.y, 30, 0, Math.PI * 2);
     ctx.fill();
 
-    // Calculate scratch percentage
-    const imageData = ctx.getImageData(0, 0, dimensions.width, dimensions.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     let transparent = 0;
-    for (let i = 3; i < imageData.data.length; i += 4) {
+
+    for (let i = 3; i < imageData.data.length; i += 16) {
       if (imageData.data[i] === 0) transparent++;
     }
-    const percentage = (transparent / (dimensions.width * dimensions.height)) * 100;
+
+    const percentage =
+      (transparent / (canvas.width * canvas.height / 4)) * 100;
+
     setScratchPercentage(percentage);
 
     if (percentage > 40 && !isRevealed) {
@@ -99,59 +128,45 @@ const ScratchCard = ({ onReveal, children }: ScratchCardProps) => {
     }
   };
 
-  const handleStart = () => setIsDrawing(true);
-  const handleEnd = () => setIsDrawing(false);
-
-  if (isRevealed) {
-    return <>{children}</>;
-  }
+  if (isRevealed) return <>{children}</>;
 
   return (
     <div>
-    <div className="mb-6 animate-float flex flex-col items-center text-center leading-none">
-    <div className="text-7xl mb-1 leading-none">🎅</div>
-    <h2 className="font-display text-2xl md:text-3xl font-bold text-primary leading-tight">
-    உங்கள் பரிசைப் பெற ஸ்க்ராட்ச் செய்யுங்கள்
-    </h2>
-    </div>
-
-
-    <div className="relative w-full max-w-[320px] mx-auto">
-      
-      
-      
-      {/* Hidden content underneath */}
-      <div className="absolute inset-0 flex items-center justify-center rounded-3xl overflow-hidden">
-        {children}
+      <div className="mb-6 flex flex-col items-center text-center">
+        <div className="text-7xl mb-1">🎅</div>
+        <h2 className="text-2xl font-bold">
+          உங்கள் பரிசைப் பெற ஸ்க்ராட்ச் செய்யுங்கள்
+        </h2>
       </div>
-      
-      {/* Scratch canvas overlay */}
-      <canvas
-        ref={canvasRef}
-        width={dimensions.width}
-        height={dimensions.height}
-        className="relative z-10 rounded-3xl cursor-pointer touch-none shadow-2xl"
-        onMouseDown={handleStart}
-        onMouseUp={handleEnd}
-        onMouseLeave={handleEnd}
-        onMouseMove={scratch}
-        onTouchStart={handleStart}
-        onTouchEnd={handleEnd}
-        onTouchMove={scratch}
-        style={{
-          boxShadow: "0 20px 60px -15px rgba(0,0,0,0.5), 0 0 30px hsl(45 93% 58% / 0.3)",
-        }}
-      />
 
-      {/* Instructions */}
-      <div className="absolute -bottom-12 left-0 right-0 text-center">
-        <p className="text-snow/80 text-sm animate-pulse">
-          ☝️ Scratch the gift to reveal your blessing!
-        </p>
+      {/* IMPORTANT: fixed height */}
+      <div
+        className="relative mx-auto"
+        style={{ width: 320, height: 320 }}
+      >
+        {/* Hidden content */}
+        <div className="absolute inset-0 flex items-center justify-center rounded-3xl overflow-hidden">
+          {children}
+        </div>
+
+        {/* Scratch canvas */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-10 rounded-3xl shadow-2xl"
+          onMouseDown={() => setIsDrawing(true)}
+          onMouseUp={() => setIsDrawing(false)}
+          onMouseLeave={() => setIsDrawing(false)}
+          onMouseMove={scratch}
+          onTouchStart={() => setIsDrawing(true)}
+          onTouchEnd={() => setIsDrawing(false)}
+          onTouchMove={scratch}
+          style={{
+            touchAction: "none",
+            cursor: "pointer",
+          }}
+        />
       </div>
     </div>
-    </div>
-    
   );
 };
 
